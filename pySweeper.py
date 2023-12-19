@@ -1,6 +1,14 @@
 import pygame
 import random
 
+#initializing window
+pygame.init()
+width, height = 810, 810
+screen = pygame.display.set_mode((width, height))
+clock = pygame.time.Clock()
+pygame.display.set_caption("pySweeper")
+running = True
+
 class SquareButton:
     def __init__(self, x, y, size, color):
         self.rect = pygame.Rect(x, y, size, size)
@@ -90,6 +98,9 @@ def setEmptySpots(buttonGrid, grid, x, y):
 def isEmptySpot(buttonGrid, grid, x, y):
     if grid[x][y]!=0:
         buttonGrid[x][y]=None
+        return False
+    else:
+        #orthagonal
         if (x+1>=0 and x+1<len(grid)) and grid[x+1][y] != -1:
             buttonGrid[x+1][y]=None
         if (x-1>=0 and x-1<len(grid)) and grid[x-1][y] != -1:
@@ -98,6 +109,7 @@ def isEmptySpot(buttonGrid, grid, x, y):
             buttonGrid[x][y+1]=None
         if (y-1>=0 and y-1<len(grid[0])) and grid[x][y-1] != -1:
             buttonGrid[x][y-1]=None
+        #corners
         if (x-1>=0 and x-1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x-1][y-1] != -1:
             buttonGrid[x-1][y-1]=None
         if (x-1>=0 and x-1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x-1][y+1] != -1:
@@ -106,23 +118,82 @@ def isEmptySpot(buttonGrid, grid, x, y):
             buttonGrid[x+1][y-1]=None
         if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] != -1:
             buttonGrid[x+1][y+1]=None  
-        return False
-    else:
         return True
     
+def gameLoop(grid, buttonGrid):
+    lost, won = False, False
+    running=True
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left mouse button
+                for x in range(len(buttonGrid)):
+                    for y in range(len(buttonGrid[0])):
+                        if(buttonGrid[x][y]):
+                            if buttonGrid[x][y].rect.collidepoint(event.pos):
+                                if(spotClicked(buttonGrid, grid, x, y)):
+                                    lost = True
+
+    screen.fill("black")
+        
+    for x in range(len(grid)):
+        for y in range(len(grid[0])):
+            if(grid[x][y]!=0 and grid[x][y]!=None):
+                screen.blit(font.render(str(grid[x][y]), True, "blue"), (x*buttonSize + buttonSize/3, y*buttonSize + buttonSize/4))
+        
+    #display buttons
+    buttonsLeft=0
+    for buttonRow in buttonGrid:
+        for button in buttonRow:
+            if(button):
+                button.draw()
+                buttonsLeft+=1
+        
+    #if all non bomb spots cleared then win
+    if buttonsLeft == bombsAmt:
+        won = True
+        
+    #draw grid            
+    for x in range(0, width, buttonSize):
+        pygame.draw.line(screen, "white", (x, 0), (x, height))
+    for y in range(0, height, buttonSize):
+        pygame.draw.line(screen, "white", (0, y), (width, y))
+        
+    pygame.display.flip()
+    clock.tick(fps)
+    return running, lost, won    
+    
+    
+#winning screen    
+def winner():
+    won = True
+    lost = False
+    running = True
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            won, lost = False, True
+    
+    screen.fill("black")
+    
+    winningText = font.render("WINNER!!!", True, "blue")
+    screen.blit(winningText, winningText.get_rect(center=(width//2, height//3)))
+    
+    clickAnywhereText = font.render("click anywhere to reset", True, "blue")     
+    screen.blit(clickAnywhereText, clickAnywhereText.get_rect(center=(width//2, height//2)))
+    
+    pygame.display.flip()
+    clock.tick(fps)
+            
+    return running, won, lost 
     
 if __name__ == "__main__":
-    #initializing window
-    pygame.init()
-    width, height = 810, 810
-    screen = pygame.display.set_mode((width, height))
-    clock = pygame.time.Clock()
-    running = True
-    pygame.display.set_caption("pySweeper")
-    
     #initialize runtime vars
     fps = 30
     won = False 
+    lost = False
     
     #initialize grids
     rows,cols = 9,9
@@ -149,46 +220,17 @@ if __name__ == "__main__":
     ####################################
     
     while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    for x in range(len(buttonGrid)):
-                        for y in range(len(buttonGrid[0])):
-                            if(buttonGrid[x][y]):
-                                if buttonGrid[x][y].rect.collidepoint(event.pos):
-                                    if(spotClicked(buttonGrid, grid, x, y)):
-                                        running=False
-        
-        
-        screen.fill("black")
-        
-        for x in range(len(grid)):
-            for y in range(len(grid[0])):
-                if(grid[x][y]!=0 and grid[x][y]!=None):
-                    screen.blit(font.render(str(grid[x][y]), True, "blue"), (x*buttonSize + buttonSize/3, y*buttonSize + buttonSize/4))
-        
-        #display buttons
-        buttonsLeft=0
-        for buttonRow in buttonGrid:
-            for button in buttonRow:
-                if(button):
-                    button.draw()
-                    buttonsLeft+=1
-        
-        #if all non bomb spots cleared then win
-        if buttonsLeft == bombsAmt:
-            won = True
-            running=False
-        
-        #draw grid            
-        for x in range(0, width, buttonSize):
-            pygame.draw.line(screen, "white", (x, 0), (x, height))
-        for y in range(0, height, buttonSize):
-            pygame.draw.line(screen, "white", (0, y), (width, y))
-        
-        pygame.display.flip()
-        clock.tick(fps)
+        if (lost==False and won==False):
+            running, lost, won = gameLoop(grid, buttonGrid)
+        elif(lost==True):
+            #reset grid
+            for x in range(rows):
+                for y in range(cols):
+                    buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
+                    grid[x][y] = None
+            fillGrid(grid, bombsAmt)
+            lost=False
+        elif(won==True):
+            running, won, lost = winner()
         
     pygame.quit()
