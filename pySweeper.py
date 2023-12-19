@@ -9,6 +9,8 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("pySweeper")
 running = True
 
+
+#BUTTON CLASS
 class SquareButton:
     def __init__(self, x, y, size, color):
         self.rect = pygame.Rect(x, y, size, size)
@@ -16,7 +18,12 @@ class SquareButton:
 
     def draw(self):
         pygame.draw.rect(screen, self.color, self.rect)
+        
+    def getColor(self):
+        return self.color
 
+
+#FILLS GRID WITH SPECIFIED AMOUNT OF BOMBS
 def fillGrid(grid, bombsAmt):
     #fill grid with bomb amount
     for _ in range(bombsAmt):
@@ -53,7 +60,7 @@ def fillGrid(grid, bombsAmt):
             totalSBombs = 0        
             
             
-#function called if button is clicked, if bomb return true
+#IF SPACE CLICKED, RETURN TRUE IF BOMB, FALSE ELSE
 def spotClicked(buttonGrid, grid, x, y):
     #bomb case
     if grid[x][y] == -1:
@@ -69,7 +76,7 @@ def spotClicked(buttonGrid, grid, x, y):
         return False
         
 
-#recursive function, if you click empty block, all surrounding empty blocks also clicked
+#RECURSIVE FUNCTION, IF YOU CLICK AN EMPTY SPACE ALL NON BOMBS SURROUNDING DELETED
 def setEmptySpots(buttonGrid, grid, x, y):
     #base case, if all spots around are not empty then return
     if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid)) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid)) and grid[x][y-1]!=0):
@@ -94,7 +101,7 @@ def setEmptySpots(buttonGrid, grid, x, y):
         setEmptySpots(buttonGrid, grid, x, y-1)
         
         
-#checks if spot in grid is empty
+#CHECKS IF SPECIFIED SPOT IN GRID IS EMPTY
 def isEmptySpot(buttonGrid, grid, x, y):
     if grid[x][y]!=0:
         buttonGrid[x][y]=None
@@ -119,7 +126,9 @@ def isEmptySpot(buttonGrid, grid, x, y):
         if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] != -1:
             buttonGrid[x+1][y+1]=None  
         return True
+     
     
+#GAME LOOP
 def gameLoop(grid, buttonGrid):
     lost, won = False, False
     running=True
@@ -127,13 +136,24 @@ def gameLoop(grid, buttonGrid):
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:  # Left mouse button
+            #left mouse click
+            if event.button == 1: 
+                for x in range(len(buttonGrid)):
+                    for y in range(len(buttonGrid[0])):
+                        if(buttonGrid[x][y]):
+                            if buttonGrid[x][y].rect.collidepoint(event.pos) and buttonGrid[x][y].getColor() == "grey":
+                                if(spotClicked(buttonGrid, grid, x, y)):
+                                    lost = True
+            #right mouse click
+            elif event.button == 3:
                 for x in range(len(buttonGrid)):
                     for y in range(len(buttonGrid[0])):
                         if(buttonGrid[x][y]):
                             if buttonGrid[x][y].rect.collidepoint(event.pos):
-                                if(spotClicked(buttonGrid, grid, x, y)):
-                                    lost = True
+                                if(buttonGrid[x][y].getColor() == "grey"):
+                                    buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("red"))
+                                else:
+                                    buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
 
     screen.fill("black")
         
@@ -165,7 +185,7 @@ def gameLoop(grid, buttonGrid):
     return running, lost, won    
     
     
-#winning screen    
+#WINNING SCREEN    
 def winner():
     won = True
     lost = False
@@ -189,6 +209,8 @@ def winner():
             
     return running, won, lost 
     
+    
+#MAIN FUNCTION
 if __name__ == "__main__":
     #initialize runtime vars
     fps = 30
@@ -215,8 +237,8 @@ if __name__ == "__main__":
     
     ####################################
     #ONLY FOR TESTING, COMMENT OUT LATER
-    for row in grid:
-        print(row)
+    #for row in grid:
+        #print(row)
     ####################################
     
     while running:
