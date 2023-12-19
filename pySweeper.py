@@ -3,7 +3,7 @@ import random
 
 #initializing window
 pygame.init()
-width, height = 810, 810
+width, height = 800, 800
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 pygame.display.set_caption("pySweeper")
@@ -102,7 +102,9 @@ def spotClicked(buttonGrid, grid, x, y):
 def setEmptySpots(buttonGrid, grid, x, y):
     #base case, if all spots around are not empty then return
     if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid)) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid)) and grid[x][y-1]!=0):
+        isEmptySpot(buttonGrid, grid, x, y)
         return
+
     
     #checks each direction, if empty continues in that direction
     if (x+1>=0 and x+1<len(grid)) and isEmptySpot(buttonGrid,grid, x+1, y):
@@ -121,12 +123,35 @@ def setEmptySpots(buttonGrid, grid, x, y):
         buttonGrid[x][y-1] = None
         grid[x][y]=None
         setEmptySpots(buttonGrid, grid, x, y-1)
+    #corners    
+    if (x-1>=0 and x-1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x-1][y-1] == 0:
+        buttonGrid[x-1][y-1]=None
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x-1, y-1)
+    if (x-1>=0 and x-1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x-1][y+1] == 0:
+        buttonGrid[x-1][y+1]=None
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x-1, y+1)
+    if (x+1>=0 and x+1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x+1][y-1] == 0:
+        buttonGrid[x+1][y-1]=None
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x+1, y-1)
+    if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] == 0:
+        buttonGrid[x+1][y+1]=None     
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x+1, y+1) 
+        
         
         
 #CHECKS IF SPECIFIED SPOT IN GRID IS EMPTY
 def isEmptySpot(buttonGrid, grid, x, y):
     if grid[x][y]!=0:
         buttonGrid[x][y]=None
+        if (x-1>=0 and x-1<len(grid)) and (y>=0 and y<len(grid[0])) and grid[x-1][y] != -1 and (((y+1>=0 and y+1<len(grid[0])) and buttonGrid[x-1][y+1]==None) or ((y-1>=0 and y-1<len(grid[0])) and buttonGrid[x-1][y-1]==None)):
+            buttonGrid[x-1][y]=None
+        if (x+1>=0 and x+1<len(grid)) and (y>=0 and y<len(grid[0])) and grid[x+1][y] != -1 and (((y+1>=0 and y+1<len(grid[0])) and buttonGrid[x+1][y+1]==None) or ((y-1>=0 and y-1<len(grid[0])) and buttonGrid[x+1][y-1]==None)):
+            buttonGrid[x+1][y]=None
+            
         return False
     else:
         #orthagonal
@@ -147,6 +172,7 @@ def isEmptySpot(buttonGrid, grid, x, y):
             buttonGrid[x+1][y-1]=None
         if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] != -1:
             buttonGrid[x+1][y+1]=None  
+        print("\n")
         return True
      
     
@@ -248,8 +274,8 @@ if __name__ == "__main__":
     lost = False
     
     #initialize grids
-    rows,cols = 9,9
-    bombsAmt = 10
+    rows,cols = 16,16
+    bombsAmt = 40
     flagsPlaced = 0
     grid = []
     buttonGrid = []
@@ -257,7 +283,7 @@ if __name__ == "__main__":
         grid.append([None]*cols)
         buttonGrid.append([None]*cols)
     
-    buttonSize = 90
+    buttonSize = 50
     for x in range(rows):
         for y in range(cols):
             buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
