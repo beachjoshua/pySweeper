@@ -65,14 +65,6 @@ def spotClicked(buttonGrid, grid, x, y):
 def setEmptySpots(buttonGrid, grid, x, y):
     #base case, if all spots around are not empty then return
     if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid)) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid)) and grid[x][y-1]!=0):
-        if (x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 and grid[x+1][y] != -1:
-            buttonGrid[x+1][y]=None
-        if (x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 and grid[x-1][y] != -1:
-            buttonGrid[x-1][y]=None
-        if (y+1>=0 and y+1<len(grid[0])) and grid[x][y+1]!=0 and grid[x][y+1] != -1:
-            buttonGrid[x][y+1]=None
-        if (y-1>=0 and y-1<len(grid[0])) and grid[x][y-1]!=0 and grid[x][y-1] != -1:
-            buttonGrid[x][y-1]=None
         return
     
     #checks each direction, if empty continues in that direction
@@ -98,14 +90,22 @@ def setEmptySpots(buttonGrid, grid, x, y):
 def isEmptySpot(buttonGrid, grid, x, y):
     if grid[x][y]!=0:
         buttonGrid[x][y]=None
-        if (x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 and grid[x+1][y] != -1:
+        if (x+1>=0 and x+1<len(grid)) and grid[x+1][y] != -1:
             buttonGrid[x+1][y]=None
-        if (x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 and grid[x-1][y] != -1:
+        if (x-1>=0 and x-1<len(grid)) and grid[x-1][y] != -1:
             buttonGrid[x-1][y]=None
-        if (y+1>=0 and y+1<len(grid[0])) and grid[x][y+1]!=0 and grid[x][y+1] != -1:
+        if (y+1>=0 and y+1<len(grid[0])) and grid[x][y+1] != -1:
             buttonGrid[x][y+1]=None
-        if (y-1>=0 and y-1<len(grid[0])) and grid[x][y-1]!=0 and grid[x][y-1] != -1:
+        if (y-1>=0 and y-1<len(grid[0])) and grid[x][y-1] != -1:
             buttonGrid[x][y-1]=None
+        if (x-1>=0 and x-1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x-1][y-1] != -1:
+            buttonGrid[x-1][y-1]=None
+        if (x-1>=0 and x-1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x-1][y+1] != -1:
+            buttonGrid[x-1][y+1]=None
+        if (x+1>=0 and x+1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x+1][y-1] != -1:
+            buttonGrid[x+1][y-1]=None
+        if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] != -1:
+            buttonGrid[x+1][y+1]=None  
         return False
     else:
         return True
@@ -122,6 +122,7 @@ if __name__ == "__main__":
     
     #initialize runtime vars
     fps = 30
+    won = False 
     
     #initialize grids
     rows,cols = 9,9
@@ -141,9 +142,11 @@ if __name__ == "__main__":
         
     fillGrid(grid, bombsAmt)    
     
+    ####################################
+    #ONLY FOR TESTING, COMMENT OUT LATER
     for row in grid:
         print(row)
-    
+    ####################################
     
     while running:
         for event in pygame.event.get():
@@ -167,10 +170,17 @@ if __name__ == "__main__":
                     screen.blit(font.render(str(grid[x][y]), True, "blue"), (x*buttonSize + buttonSize/3, y*buttonSize + buttonSize/4))
         
         #display buttons
+        buttonsLeft=0
         for buttonRow in buttonGrid:
             for button in buttonRow:
                 if(button):
                     button.draw()
+                    buttonsLeft+=1
+        
+        #if all non bomb spots cleared then win
+        if buttonsLeft == bombsAmt:
+            won = True
+            running=False
         
         #draw grid            
         for x in range(0, width, buttonSize):
