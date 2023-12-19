@@ -58,6 +58,28 @@ def fillGrid(grid, bombsAmt):
                 grid[x][y]=totalSBombs                          
             #reset total surrounding bombs                
             totalSBombs = 0        
+         
+            
+#IF NUMBER CLICKED AND THAT AMOUNT OF FLAGS PLACED AROUND THEN DELETE ALL BLOCKS
+def numberClicked(buttonGrid, grid, x, y):
+    numFlags = 0
+    
+    #find num of flags placed in surrounding 3x3 grid
+    for sX in range(x-1, x+2):
+        for sY in range(y-1, y+2):
+            if(sX>=0 and sX<len(grid)) and (sY>=0 and sY<len(grid[0])) and (buttonGrid[sX][sY]) and (buttonGrid[sX][sY].getColor() == "red"):
+                numFlags+=1
+    
+    lost = False
+    #if num flags is = to num of bombs
+    if numFlags==grid[x][y]:
+        for sX in range(x-1, x+2):
+            for sY in range(y-1, y+2):
+                if(sX>=0 and sX<len(grid)) and (sY>=0 and sY<len(grid[0])) and (buttonGrid[sX][sY]) and (buttonGrid[sX][sY].getColor() == "grey"):
+                    lost = spotClicked(buttonGrid, grid, sX, sY)
+                    if lost==True:
+                        return lost
+    return lost
             
             
 #IF SPACE CLICKED, RETURN TRUE IF BOMB, FALSE ELSE
@@ -129,7 +151,7 @@ def isEmptySpot(buttonGrid, grid, x, y):
      
     
 #GAME LOOP
-def gameLoop(grid, buttonGrid):
+def gameLoop(grid, buttonGrid, flagsPlaced):
     lost, won = False, False
     running=True
     for event in pygame.event.get():
@@ -137,23 +159,31 @@ def gameLoop(grid, buttonGrid):
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             #left mouse click
+            buttonClicked = False
             if event.button == 1: 
                 for x in range(len(buttonGrid)):
                     for y in range(len(buttonGrid[0])):
                         if(buttonGrid[x][y]):
                             if buttonGrid[x][y].rect.collidepoint(event.pos) and buttonGrid[x][y].getColor() == "grey":
-                                if(spotClicked(buttonGrid, grid, x, y)):
-                                    lost = True
+                                buttonClicked = True
+                                lost = spotClicked(buttonGrid, grid, x, y)
+                if buttonClicked==False:
+                    mouseX, mouseY = pygame.mouse.get_pos()
+                    lost = numberClicked(buttonGrid, grid, mouseX//buttonSize, mouseY//buttonSize)
+                
+                                
             #right mouse click
             elif event.button == 3:
                 for x in range(len(buttonGrid)):
                     for y in range(len(buttonGrid[0])):
                         if(buttonGrid[x][y]):
                             if buttonGrid[x][y].rect.collidepoint(event.pos):
-                                if(buttonGrid[x][y].getColor() == "grey"):
+                                if(buttonGrid[x][y].getColor() == "grey" and flagsPlaced<bombsAmt):
                                     buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("red"))
-                                else:
+                                    flagsPlaced+=1
+                                elif(buttonGrid[x][y].getColor() == "red"):
                                     buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
+                                    flagsPlaced-=1
 
     screen.fill("black")
         
@@ -182,7 +212,7 @@ def gameLoop(grid, buttonGrid):
         
     pygame.display.flip()
     clock.tick(fps)
-    return running, lost, won    
+    return running, lost, won, flagsPlaced
     
     
 #WINNING SCREEN    
@@ -220,6 +250,7 @@ if __name__ == "__main__":
     #initialize grids
     rows,cols = 9,9
     bombsAmt = 10
+    flagsPlaced = 0
     grid = []
     buttonGrid = []
     for _ in range(rows):
@@ -243,7 +274,7 @@ if __name__ == "__main__":
     
     while running:
         if (lost==False and won==False):
-            running, lost, won = gameLoop(grid, buttonGrid)
+            running, lost, won, flagsPlaced = gameLoop(grid, buttonGrid, flagsPlaced)
         elif(lost==True):
             #reset grid
             for x in range(rows):
@@ -252,7 +283,9 @@ if __name__ == "__main__":
                     grid[x][y] = None
             fillGrid(grid, bombsAmt)
             lost=False
+            flagsPlaced=0
         elif(won==True):
             running, won, lost = winner()
+            flagsPlaced=0
         
     pygame.quit()
