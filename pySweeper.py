@@ -3,7 +3,7 @@ import random
 
 #initializing window
 pygame.init()
-width, height = 800, 800
+width, height = 1500, 800
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 pygame.display.set_caption("pySweeper")
@@ -101,7 +101,7 @@ def spotClicked(buttonGrid, grid, x, y):
 #RECURSIVE FUNCTION, IF YOU CLICK AN EMPTY SPACE ALL NON BOMBS SURROUNDING DELETED
 def setEmptySpots(buttonGrid, grid, x, y):
     #base case, if all spots around are not empty then return
-    if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid)) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid)) and grid[x][y-1]!=0):
+    if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid[0])) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid[0])) and grid[x][y-1]!=0):
         isEmptySpot(buttonGrid, grid, x, y)
         return
 
@@ -274,8 +274,8 @@ if __name__ == "__main__":
     lost = False
     
     #initialize grids
-    rows,cols = 16,16
-    bombsAmt = 40
+    rows,cols = 30,16
+    bombsAmt = 99
     flagsPlaced = 0
     grid = []
     buttonGrid = []
