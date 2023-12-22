@@ -100,10 +100,11 @@ def spotClicked(buttonGrid, grid, x, y):
 
 #RECURSIVE FUNCTION, IF YOU CLICK AN EMPTY SPACE ALL NON BOMBS SURROUNDING DELETED
 def setEmptySpots(buttonGrid, grid, x, y):
-    #base case, if all spots around are not empty then return
+     #base case, if all spots around are not empty then return
     if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid[0])) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid[0])) and grid[x][y-1]!=0):
+        isEmptySpot(buttonGrid, grid, x, y)
         return
-    
+
     #checks each direction, if empty continues in that direction
     if (x+1>=0 and x+1<len(grid)) and isEmptySpot(buttonGrid,grid, x+1, y):
         buttonGrid[x+1][y] = None
@@ -121,12 +122,34 @@ def setEmptySpots(buttonGrid, grid, x, y):
         buttonGrid[x][y-1] = None
         grid[x][y]=None
         setEmptySpots(buttonGrid, grid, x, y-1)
+    #corners    
+    if (x-1>=0 and x-1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x-1][y-1] == 0:
+        buttonGrid[x-1][y-1]=None
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x-1, y-1)
+    if (x-1>=0 and x-1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x-1][y+1] == 0:
+        buttonGrid[x-1][y+1]=None
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x-1, y+1)
+    if (x+1>=0 and x+1<len(grid)) and (y-1>=0 and y-1<len(grid[0])) and grid[x+1][y-1] == 0:
+        buttonGrid[x+1][y-1]=None
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x+1, y-1)
+    if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] == 0:
+        buttonGrid[x+1][y+1]=None     
+        grid[x][y]=None
+        setEmptySpots(buttonGrid, grid, x+1, y+1)
         
         
 #CHECKS IF SPECIFIED SPOT IN GRID IS EMPTY
 def isEmptySpot(buttonGrid, grid, x, y):
     if grid[x][y]!=0:
         buttonGrid[x][y]=None
+        if (x-1>=0 and x-1<len(grid)) and (y>=0 and y<len(grid[0])) and grid[x-1][y] != -1 and (((y+1>=0 and y+1<len(grid[0])) and buttonGrid[x-1][y+1]==None) or ((y-1>=0 and y-1<len(grid[0])) and buttonGrid[x-1][y-1]==None)):
+            buttonGrid[x-1][y]=None
+        if (x+1>=0 and x+1<len(grid)) and (y>=0 and y<len(grid[0])) and grid[x+1][y] != -1 and (((y+1>=0 and y+1<len(grid[0])) and buttonGrid[x+1][y+1]==None) or ((y-1>=0 and y-1<len(grid[0])) and buttonGrid[x+1][y-1]==None)):
+            buttonGrid[x+1][y]=None
+            
         return False
     else:
         #orthagonal
@@ -147,6 +170,7 @@ def isEmptySpot(buttonGrid, grid, x, y):
             buttonGrid[x+1][y-1]=None
         if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] != -1:
             buttonGrid[x+1][y+1]=None  
+        print("\n")
         return True
      
 #CHANGE DIFFICULTY
@@ -170,7 +194,7 @@ def changeScreen(level, currentLevel):
             grid[x][y] = None
     fillGrid(grid, bombsAmt)
     
-    return width, height, rows, cols, buttonSize, buttonGrid, grid
+    return width, height, rows, cols, buttonSize, buttonGrid, grid, bombsAmt
     
     
 #GAME LOOP
@@ -321,7 +345,7 @@ if __name__ == "__main__":
         #if loser    
         elif(lost==True):
             #reset grid
-            width, height, rows, cols, buttonSize, buttonGrid, grid = changeScreen(level, currentLevel)
+            width, height, rows, cols, buttonSize, buttonGrid, grid, bombsAmt = changeScreen(level, currentLevel)
             lost=False
             flagsPlaced=0
                     
