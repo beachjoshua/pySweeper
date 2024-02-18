@@ -3,7 +3,7 @@ import random
 
 #initializing window
 pygame.init()
-width, height = 1500, 800
+width, height = 810, 810
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 pygame.display.set_caption("pySweeper")
@@ -100,12 +100,11 @@ def spotClicked(buttonGrid, grid, x, y):
 
 #RECURSIVE FUNCTION, IF YOU CLICK AN EMPTY SPACE ALL NON BOMBS SURROUNDING DELETED
 def setEmptySpots(buttonGrid, grid, x, y):
-    #base case, if all spots around are not empty then return
+     #base case, if all spots around are not empty then return
     if ((x+1>=0 and x+1<len(grid)) and grid[x+1][y]!=0 ) and ((x-1>=0 and x-1<len(grid)) and grid[x-1][y]!=0 ) and ((y+1>=0 and y+1<len(grid[0])) and grid[x][y+1]!=0) and  ((y-1>=0 and y-1<len(grid[0])) and grid[x][y-1]!=0):
         isEmptySpot(buttonGrid, grid, x, y)
         return
 
-    
     #checks each direction, if empty continues in that direction
     if (x+1>=0 and x+1<len(grid)) and isEmptySpot(buttonGrid,grid, x+1, y):
         buttonGrid[x+1][y] = None
@@ -139,8 +138,7 @@ def setEmptySpots(buttonGrid, grid, x, y):
     if (x+1>=0 and x+1<len(grid)) and (y+1>=0 and y+1<len(grid[0])) and grid[x+1][y+1] == 0:
         buttonGrid[x+1][y+1]=None     
         grid[x][y]=None
-        setEmptySpots(buttonGrid, grid, x+1, y+1) 
-        
+        setEmptySpots(buttonGrid, grid, x+1, y+1)
         
         
 #CHECKS IF SPECIFIED SPOT IN GRID IS EMPTY
@@ -175,9 +173,32 @@ def isEmptySpot(buttonGrid, grid, x, y):
         print("\n")
         return True
      
+#CHANGE DIFFICULTY
+def changeScreen(level, currentLevel):
+    buttonSize = level[currentLevel][3]
+    rows = level[currentLevel][0]
+    cols = level[currentLevel][1]
+    bombsAmt = level[currentLevel][2]
+    width, height = level[currentLevel][4], level[currentLevel][5]
+    screen = pygame.display.set_mode((width, height))             
+                    
+    buttonGrid = []
+    grid = []
+    for _ in range(rows):
+        grid.append([None]*cols)
+        buttonGrid.append([None]*cols)
+                        
+    for x in range(rows):
+        for y in range(cols):
+            buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
+            grid[x][y] = None
+    fillGrid(grid, bombsAmt)
+    
+    return width, height, rows, cols, buttonSize, buttonGrid, grid, bombsAmt
+    
     
 #GAME LOOP
-def gameLoop(grid, buttonGrid, flagsPlaced):
+def gameLoop(grid, buttonGrid, flagsPlaced, width, height, buttonSize, currentLevel, totLevels):
     lost, won = False, False
     running=True
     for event in pygame.event.get():
@@ -210,6 +231,19 @@ def gameLoop(grid, buttonGrid, flagsPlaced):
                                 elif(buttonGrid[x][y].getColor() == "red"):
                                     buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
                                     flagsPlaced-=1
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT:
+                if currentLevel<totLevels-1:
+                    currentLevel += 1
+                else:
+                    currentLevel = 0
+                lost = True
+            elif event.key == pygame.K_LEFT:
+                if currentLevel>0:
+                    currentLevel -= 1
+                else:
+                    currentLevel = 2
+                lost=True
 
     screen.fill("black")
         
@@ -238,7 +272,7 @@ def gameLoop(grid, buttonGrid, flagsPlaced):
         
     pygame.display.flip()
     clock.tick(fps)
-    return running, lost, won, flagsPlaced
+    return running, lost, won, flagsPlaced, currentLevel
     
     
 #WINNING SCREEN    
@@ -274,16 +308,21 @@ if __name__ == "__main__":
     lost = False
     
     #initialize grids
-    rows,cols = 30,16
-    bombsAmt = 99
+    rows,cols = 9,9
+    bombsAmt = 10
     flagsPlaced = 0
     grid = []
     buttonGrid = []
+    
+    #rows, cols, bombsAmt, buttonSize, screen width, screen height
+    level = [[9, 9, 10, 90, 810, 810], [16, 16, 40, 50, 800, 800], [30, 16, 99, 50, 1500, 800]]
+    currentLevel = 0
+    
     for _ in range(rows):
         grid.append([None]*cols)
         buttonGrid.append([None]*cols)
     
-    buttonSize = 50
+    buttonSize = 90
     for x in range(rows):
         for y in range(cols):
             buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
@@ -298,18 +337,19 @@ if __name__ == "__main__":
         #print(row)
     ####################################
     
-    while running:
+    while running:     
+        #main game loop
         if (lost==False and won==False):
-            running, lost, won, flagsPlaced = gameLoop(grid, buttonGrid, flagsPlaced)
+            running, lost, won, flagsPlaced, currentLevel = gameLoop(grid, buttonGrid, flagsPlaced, width, height, buttonSize, currentLevel, len(level))
+            font = pygame.font.Font(None, buttonSize)        
+        #if loser    
         elif(lost==True):
             #reset grid
-            for x in range(rows):
-                for y in range(cols):
-                    buttonGrid[x][y] = SquareButton(x*buttonSize, y*buttonSize, buttonSize, ("grey"))
-                    grid[x][y] = None
-            fillGrid(grid, bombsAmt)
+            width, height, rows, cols, buttonSize, buttonGrid, grid, bombsAmt = changeScreen(level, currentLevel)
             lost=False
             flagsPlaced=0
+                    
+        #if winner
         elif(won==True):
             running, won, lost = winner()
             flagsPlaced=0
